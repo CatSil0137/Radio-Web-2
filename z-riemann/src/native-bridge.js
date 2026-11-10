@@ -3,6 +3,7 @@
 //  - <a download> with blob: URLs (exports PNG/CSV/HTML/video) -> silently ignored
 //  - navigator.share / navigator.canShare with files            -> undefined
 // Here we provide them with the Filesystem and Share plugins, so the page
+//  - speechSynthesis / SpeechSynthesisUtterance (tour voices)  -> missing
 // works unchanged. Outside the app (normal browser) this script does nothing.
 (function () {
   var Cap = window.Capacitor;
@@ -82,6 +83,94 @@
       throw err;
     }
   };
+
+  // --- speechSynthesis (Web Speech API) on top of Android's native TTS ------
+  var TTS = P.TextToSpeech;
+  if (TTS) (function () {
+    var voices = [], queue = [], current = null, gen = 0, listeners = {};
+
+    function fire(type, ev) {
+      var fn = synth["on" + type];
+      try { if (typeof fn === "function") fn.call(synth, ev); } catch (e) {}
+      (listeners[type] || []).forEach(function (l) { try { l.call(synth, ev); } catch (e) {} });
+    }
+    function uFire(u, type, extra) {
+      var ev = { type: type, utterance: u, charIndex: 0, elapsedTime: 0, name: "" };
+      if (extra) for (var k in extra) ev[k] = extra[k];
+      try { if (typeof u["on" + type] === "function") u["on" + type](ev); } catch (e) {}
+      (u._l[type] || []).forEach(function (l) { try { l(ev); } catch (e) {} });
+    }
+
+    function Utterance(text) {
+      this.text = text == null ? "" : String(text);
+      this.lang = ""; this.voice = null; this.rate = 1; this.pitch = 1; this.volume = 1;
+      this.onstart = this.onend = this.onerror = this.onpause = this.onresume = this.onboundary = this.onmark = null;
+      this._l = {};
+    }
+    Utterance.prototype.addEventListener = function (t, f) { (this._l[t] = this._l[t] || []).push(f); };
+    Utterance.prototype.removeEventListener = function (t, f) { this._l[t] = (this._l[t] || []).filter(function (x) { return x !== f; }); };
+
+    function next() {
+      if (current || !queue.length) { synth.speaking = !!current; synth.pending = queue.length > 0; return; }
+      var u = current = queue.shift(), my = gen;
+      synth.speaking = true; synth.pending = queue.length > 0;
+      var opts = {
+        text: u.text,
+        lang: (u.voice && u.voice.lang) || u.lang || document.documentElement.lang || "it-IT",
+        rate: Math.max(0.1, Math.min(10, +u.rate || 1)),
+        pitch: Math.max(0, Math.min(2, u.pitch == null ? 1 : +u.pitch)),
+        volume: Math.max(0, Math.min(1, u.volume == null ? 1 : +u.volume)),
+        queueStrategy: 0
+      };
+      if (u.voice && typeof u.voice._i === "number") opts.voice = u.voice._i;
+      uFire(u, "start");
+      TTS.speak(opts).then(function () {
+        if (my !== gen) return;
+        current = null; uFire(u, "end"); next();
+      }, function (e) {
+        if (my !== gen) return;
+        current = null; uFire(u, "error", { error: "synthesis-failed", message: (e && e.message) || "" }); next();
+      });
+    }
+
+    var synth = {
+      speaking: false, pending: false, paused: false, onvoiceschanged: null,
+      getVoices: function () { return voices.slice(); },
+      speak: function (u) { if (!(u instanceof Utterance)) return; queue.push(u); next(); },
+      cancel: function () {
+        gen++;
+        var dropped = (current ? [current] : []).concat(queue);
+        current = null; queue = []; synth.speaking = synth.pending = false;
+        try { TTS.stop(); } catch (e) {}
+        dropped.forEach(function (u) { uFire(u, "error", { error: "interrupted" }); });
+      },
+      pause: function () {}, resume: function () {},
+      addEventListener: function (t, f) { (listeners[t] = listeners[t] || []).push(f); },
+      removeEventListener: function (t, f) { listeners[t] = (listeners[t] || []).filter(function (x) { return x !== f; }); }
+    };
+
+    try { Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true, writable: true }); }
+    catch (e) { window.speechSynthesis = synth; }
+    window.SpeechSynthesisUtterance = Utterance;
+
+    // Load the device voices (names like "en-us-x-sfg-local"), then notify the page.
+    // The Android TTS engine initialises asynchronously: retry until it answers.
+    var tries = 0;
+    function loadVoices() {
+      TTS.getSupportedVoices().then(function (r) {
+        var list = (r && r.voices) || [];
+        if (!list.length && ++tries < 20) return setTimeout(loadVoices, 500);
+        voices = list.map(function (v, i) {
+          return {
+            _i: i, name: v.name || v.voiceURI || ("voice " + i), voiceURI: v.voiceURI || v.name || "",
+            lang: String(v.lang || "").replace("_", "-"), localService: v.localService !== false, default: !!v["default"]
+          };
+        });
+        fire("voiceschanged", { type: "voiceschanged" });
+      }).catch(function () { if (++tries < 20) setTimeout(loadVoices, 500); });
+    }
+    loadVoices();
+  })();
 
   // --- <a download> ------------------------------------------------------------
   function handleAnchor(a) {

@@ -23,6 +23,10 @@ Con un tag `z-riemann-v1.0.0` l'APK viene allegato anche a una Release.
   **Documenti/Z Riemann Visualizer**; se non è possibile si apre il menu
   Condividi;
 - `navigator.share` (opzione "Salva con Condividi") usa il menu di Android;
+- `speechSynthesis` (voci del Tour nelle lingue diverse dall'italiano e
+  «Voce del dispositivo») usa la sintesi vocale di Android tramite il plugin
+  `@capacitor-community/text-to-speech`. Le voci disponibili sono quelle
+  installate in Impostazioni → Sintesi vocale (Google Speech Services);
 - i link esterni si aprono nel browser.
 
 `MainActivity.java` abilita il vero schermo intero (vista 3D, lettore video);
