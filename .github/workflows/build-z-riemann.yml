@@ -2,6 +2,7 @@ name: Build Z Riemann Visualizer APK
 
 on:
   push:
+    branches: ["**"]
     paths:
       - "z-riemann/**"
       - ".github/workflows/build-z-riemann.yml"
