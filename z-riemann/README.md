@@ -1,4 +1,4 @@
-# Z Riemann Visualizer — app Android
+# Z Riemann Visualizer — app Android e Windows
 
 App Android (Capacitor) costruita da `src/zeta-riemann.html`. Funziona
 offline: tutto (three.js, immagini, audio) è incorporato nel file HTML.
@@ -43,3 +43,16 @@ cd android && ./gradlew assembleDebug
 ```
 
 Icona: `assets/` → `npm run icons` per rigenerarla.
+
+## Versione Windows portabile
+
+`desktop/` contiene la versione Windows (Electron): un solo file
+`Z-Riemann-Visualizer-Portable-x.y.z.exe` che si avvia senza installazione.
+Si scarica dallo stesso workflow, artifact `Z-Riemann-Visualizer-windows-portable`.
+
+- I file esportati si salvano con la normale finestra "Salva con nome".
+- Le voci del Tour usano le voci di Windows (Impostazioni → Ora e lingua →
+  Voce / Lingua: aggiungi la lingua con la sintesi vocale).
+- F11 = schermo intero.
+
+Build in locale (su Windows): `cd z-riemann/desktop && npm install && npm run dist:win`.

@@ -1,4 +1,4 @@
-name: Build Z Riemann Visualizer APK
+name: Build Z Riemann Visualizer (APK + Windows EXE)
 
 on:
   push:
@@ -60,3 +60,35 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: z-riemann/dist/Z-Riemann-Visualizer.apk
+
+  windows:
+    name: Windows portable EXE
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: z-riemann/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: z-riemann/desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build portable EXE
+        run: npm run dist:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Z-Riemann-Visualizer-windows-portable
+          path: z-riemann/desktop/release/*.exe
+
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/z-riemann-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: z-riemann/desktop/release/*.exe

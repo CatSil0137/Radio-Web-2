@@ -1,0 +1,39 @@
+{
+  "name": "z-riemann-visualizer-desktop",
+  "productName": "Z Riemann Visualizer",
+  "version": "1.0.0",
+  "description": "Z Riemann Visualizer",
+  "author": "Z Riemann Visualizer",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "copy-web": "node copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist:win": "npm run copy-web && electron-builder --win portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.zriemann.visualizer",
+    "productName": "Z Riemann Visualizer",
+    "publish": null,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "app/**/*",
+      "build/icon.png"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": ["portable"]
+    },
+    "portable": {
+      "artifactName": "Z-Riemann-Visualizer-Portable-${version}.${ext}"
+    }
+  }
+}
