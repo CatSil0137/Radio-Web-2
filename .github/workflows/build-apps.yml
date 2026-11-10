@@ -88,8 +88,6 @@ jobs:
 
       - name: Build Windows installer and portable EXE
         working-directory: desktop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:win
 
       - uses: actions/upload-artifact@v4

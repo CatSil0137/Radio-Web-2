@@ -45,6 +45,7 @@
     },
     "portable": {
       "artifactName": "RadioWeb-Portable-${version}.${ext}"
-    }
+    },
+    "publish": null
   }
 }
