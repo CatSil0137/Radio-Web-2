@@ -2,8 +2,10 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
-    "axios": "^1.8.4",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
     "cra-template": "1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -14,7 +16,11 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "android:add": "cap add android",
+    "android:sync": "craco build && cap sync android",
+    "android:icons": "capacitor-assets generate --android --iconBackgroundColor '#1e1b4b' --splashBackgroundColor '#1e1b4b'",
+    "android:open": "cap open android"
   },
   "browserslist": {
     "production": [
@@ -29,6 +35,8 @@
     ]
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0",
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
     "autoprefixer": "^10.4.20",

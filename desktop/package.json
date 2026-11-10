@@ -1,0 +1,50 @@
+{
+  "name": "radio-web-desktop",
+  "productName": "Radio Web",
+  "version": "1.0.0",
+  "description": "Radio Web - Ascolta le tue stazioni radio preferite",
+  "author": "Radio Web",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "copy-web": "node copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist:win": "npm run copy-web && electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.radioweb.app",
+    "productName": "Radio Web",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "app/**/*",
+      "build/icon.png"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Radio Web",
+      "artifactName": "RadioWeb-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "RadioWeb-Portable-${version}.${ext}"
+    }
+  }
+}

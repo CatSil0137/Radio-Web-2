@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import * as radioApi from "./radioApi";
 
 const RadioPlayer = () => {
   const [stations, setStations] = useState([]);
@@ -30,8 +27,7 @@ const RadioPlayer = () => {
   const loadPopularStations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/stations/popular?limit=100`);
-      setStations(response.data);
+      setStations(await radioApi.getPopularStations(100));
     } catch (error) {
       console.error("Error loading stations:", error);
     } finally {
@@ -47,8 +43,7 @@ const RadioPlayer = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/stations/search?query=${encodeURIComponent(searchQuery)}&limit=50`);
-      setStations(response.data);
+      setStations(await radioApi.searchStations(searchQuery, 50));
     } catch (error) {
       console.error("Error searching stations:", error);
     } finally {
@@ -56,36 +51,33 @@ const RadioPlayer = () => {
     }
   };
 
-  const loadFavorites = async () => {
-    try {
-      const response = await axios.get(`${API}/favorites`);
-      setFavorites(response.data);
-    } catch (error) {
-      console.error("Error loading favorites:", error);
-    }
+  const loadFavorites = () => {
+    setFavorites(radioApi.loadFavorites());
   };
 
-  const addToFavorites = async (station) => {
-    try {
-      await axios.post(`${API}/favorites`, {
+  const updateFavorites = (next) => {
+    radioApi.saveFavorites(next);
+    setFavorites(next);
+  };
+
+  const addToFavorites = (station) => {
+    if (isFavorite(station.id)) return;
+    updateFavorites([
+      ...favorites,
+      {
+        id: station.id,
         station_id: station.id,
         name: station.name,
         url: station.url,
-        favicon: station.favicon
-      });
-      loadFavorites();
-    } catch (error) {
-      console.error("Error adding to favorites:", error);
-    }
+        favicon: station.favicon,
+        country: station.country || "",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
   };
 
-  const removeFromFavorites = async (stationId) => {
-    try {
-      await axios.delete(`${API}/favorites/${stationId}`);
-      loadFavorites();
-    } catch (error) {
-      console.error("Error removing from favorites:", error);
-    }
+  const removeFromFavorites = (stationId) => {
+    updateFavorites(favorites.filter((fav) => fav.station_id !== stationId));
   };
 
   const playStation = (station) => {
@@ -140,7 +132,7 @@ const RadioPlayer = () => {
       name: fav.name,
       url: fav.url,
       favicon: fav.favicon,
-      country: "",
+      country: fav.country || "",
       votes: 0
     })) : stations;
 

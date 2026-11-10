@@ -1,0 +1,12 @@
+{
+  "appId": "com.radioweb.app",
+  "appName": "Radio Web",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
